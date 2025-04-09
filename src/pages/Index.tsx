@@ -46,9 +46,9 @@ const Index = () => {
               alt="Delivery Driver"
               className="w-full h-full object-cover mix-blend-overlay"
             />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-white">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-shadow">Earn More. Drive Less.</h1>
-              <p className="text-xl md:text-2xl max-w-md text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-10">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">Earn More. Drive Less.</h1>
+              <p className="text-xl md:text-2xl max-w-md text-center text-black">
                 The smartest way to manage your food delivery orders from multiple platforms.
               </p>
             </div>

@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { OrderList } from '@/components/orders/OrderList';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Filter } from 'lucide-react';
 

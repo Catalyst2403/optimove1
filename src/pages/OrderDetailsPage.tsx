@@ -22,6 +22,15 @@ const defaultCenter = {
   lng: 72.5714,
 };
 
+// To get a Google Maps API key:
+// 1. Go to https://console.cloud.google.com/
+// 2. Create a new project or select an existing one
+// 3. Enable the Maps JavaScript API, Directions API, and Places API
+// 4. Create API credentials (API key)
+// 5. Restrict the API key to your domains for security
+// Replace 'YOUR_GOOGLE_MAPS_API_KEY' with your actual key
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -31,7 +40,7 @@ const OrderDetailsPage = () => {
   const [isAccepting, setIsAccepting] = useState(false);
   
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'YOUR_API_KEY', // Replace with your API key
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: ['places'],
   });
   
@@ -184,7 +193,7 @@ const OrderDetailsPage = () => {
               )}
             </GoogleMap>
           ) : (
-            <div className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="h-[300px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
               <p>Loading map...</p>
             </div>
           )}

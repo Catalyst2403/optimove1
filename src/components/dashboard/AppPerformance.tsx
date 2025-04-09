@@ -25,11 +25,11 @@ export const AppPerformance = () => {
       }, {});
       
       // Calculate total earnings
-      const totalEarnings = Object.values(earnings).reduce((sum: any, val: any) => sum + val, 0);
+      const totalEarnings = Object.values(earnings).reduce((sum: any, val: any) => sum + Number(val), 0);
       
       // Calculate percentages
       const percentages = Object.entries(earnings).reduce((acc: any, [app, amount]: any) => {
-        acc[app] = Math.round((amount / totalEarnings) * 100);
+        acc[app] = Math.round((Number(amount) / totalEarnings) * 100);
         return acc;
       }, {});
       
@@ -57,7 +57,7 @@ export const AppPerformance = () => {
     }
   };
   
-  // Get progress color for app
+  // Get progress color class for app
   const getProgressColorClass = (app: string): string => {
     switch (app) {
       case 'swiggy':
@@ -106,8 +106,7 @@ export const AppPerformance = () => {
                   </div>
                   <Progress 
                     value={percentage} 
-                    className="h-2"
-                    indicatorClassName={getProgressColorClass(app)}
+                    className={`h-2 ${getProgressColorClass(app)}`}
                   />
                 </div>
               ))
