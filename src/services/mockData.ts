@@ -1,120 +1,144 @@
 
-import { DeliveryApp, Order, EarningRecord, DailyEarning, WeeklyEarning } from '../types';
+import { Order } from '@/types';
 
-// Helper to generate random orders
-const generateRandomOrders = (count: number): Order[] => {
-  const apps: DeliveryApp[] = ['swiggy', 'zomato', 'eatsure'];
-  const locations = [
-    { pickup: 'Food Plaza Mall', drop: 'Green Meadows Apartments' },
-    { pickup: 'Spice Garden Restaurant', drop: 'Riverside Villa' },
-    { pickup: 'Urban Bites Cafe', drop: 'Sunshine Heights' },
-    { pickup: 'Royal Dragon Chinese', drop: 'Tech Park Office' },
-    { pickup: 'Tandoori Junction', drop: 'Blue Ocean Resort' },
-    { pickup: 'Pizza Paradise', drop: 'Golden Gate Society' },
-    { pickup: 'McBurger Joint', drop: 'Silver Springs Complex' },
-    { pickup: 'Healthy Bowls', drop: 'Emerald Towers' }
+class MockDataService {
+  private orders: Order[] = [
+    {
+      id: '1',
+      app: 'swiggy',
+      pickupLocation: 'Bikaneri Restaurant, Bodakdev',
+      dropLocation: 'Parivar Society, Near ISKON Temple',
+      distance: 3.2,
+      estimatedTime: 18,
+      pay: 35,
+    },
+    {
+      id: '2',
+      app: 'zomato',
+      pickupLocation: 'The Belgian Waffle, CG Road',
+      dropLocation: 'Indraprasth Tower, C.G. Road',
+      distance: 2.1,
+      estimatedTime: 12,
+      pay: 45,
+    },
+    {
+      id: '3',
+      app: 'eatsure',
+      pickupLocation: 'Hotel Havmor, Navrangpura',
+      dropLocation: 'Sarthak Complex, Satellite',
+      distance: 4.5,
+      estimatedTime: 25,
+      pay: 75,
+    },
+    {
+      id: '4',
+      app: 'swiggy',
+      pickupLocation: 'Pizza Hut, Vastrapur',
+      dropLocation: 'Prernatirth Derasar, Jodhpur',
+      distance: 2.8,
+      estimatedTime: 16,
+      pay: 30,
+    },
+    {
+      id: '5',
+      app: 'zomato',
+      pickupLocation: 'Domino\'s Pizza, Satellite',
+      dropLocation: 'Indraprasth Greens, Prahlad Nagar',
+      distance: 3.7,
+      estimatedTime: 20,
+      pay: 50,
+    },
   ];
   
-  const orders: Order[] = [];
+  private moreOrders: Order[] = [
+    {
+      id: '6',
+      app: 'swiggy',
+      pickupLocation: 'Honest Restaurant, Ashram Road',
+      dropLocation: 'Ratnam Shopping Mall, C.G. Road',
+      distance: 2.4,
+      estimatedTime: 14,
+      pay: 40,
+    },
+    {
+      id: '7',
+      app: 'zomato',
+      pickupLocation: 'McDonald\'s, SG Highway',
+      dropLocation: 'Acropolis Mall, Thaltej',
+      distance: 1.8,
+      estimatedTime: 10,
+      pay: 25,
+    },
+    {
+      id: '8',
+      app: 'eatsure',
+      pickupLocation: 'La Pino\'z Pizza, Navrangpura',
+      dropLocation: 'Parimal Garden, Ellis Bridge',
+      distance: 5.1,
+      estimatedTime: 28,
+      pay: 80,
+    },
+    {
+      id: '9',
+      app: 'swiggy',
+      pickupLocation: 'Subway, Law Garden',
+      dropLocation: 'Jodhpur Cross Roads, Satellite',
+      distance: 3.5,
+      estimatedTime: 19,
+      pay: 45,
+    },
+    {
+      id: '10',
+      app: 'zomato',
+      pickupLocation: 'The Grand Thakar, Sola',
+      dropLocation: 'Alpha One Mall, Vastrapur',
+      distance: 2.3,
+      estimatedTime: 13,
+      pay: 30,
+    },
+  ];
   
-  for (let i = 0; i < count; i++) {
-    const location = locations[Math.floor(Math.random() * locations.length)];
-    const app = apps[Math.floor(Math.random() * apps.length)];
-    const distance = +(Math.random() * 8 + 1).toFixed(1);
-    const pay = Math.floor(Math.random() * 150 + 50);
-    const estimatedTime = Math.floor(distance * 5 + 10);
-    
-    orders.push({
-      id: `order-${Date.now()}-${i}`,
-      app,
-      pickupLocation: location.pickup,
-      dropLocation: location.drop,
-      distance,
-      pay,
-      estimatedTime,
-      timestamp: new Date(Date.now() - Math.floor(Math.random() * 60000))
-    });
-  }
-  
-  // Sort by highest pay first
-  return orders.sort((a, b) => b.pay - a.pay);
-};
-
-// Generate mock earnings data for the past 7 days
-const generateMockEarnings = (): {
-  records: EarningRecord[],
-  daily: DailyEarning[],
-  weekly: WeeklyEarning[]
-} => {
-  const apps: DeliveryApp[] = ['swiggy', 'zomato', 'eatsure'];
-  const records: EarningRecord[] = [];
-  const daily: Record<string, DailyEarning> = {};
-  
-  // Generate for past 7 days
-  for (let i = 0; i < 7; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateString = date.toISOString().split('T')[0];
-    
-    // Generate 5-15 orders per day
-    const ordersPerDay = Math.floor(Math.random() * 10 + 5);
-    
-    for (let j = 0; j < ordersPerDay; j++) {
-      const app = apps[Math.floor(Math.random() * apps.length)];
-      const amount = Math.floor(Math.random() * 150 + 50);
-      
-      const record: EarningRecord = {
-        id: `earning-${date.getTime()}-${j}`,
-        date: new Date(date),
-        amount,
-        app,
-        orderId: `order-${date.getTime()}-${j}`
-      };
-      
-      records.push(record);
-      
-      // Add to daily summary
-      if (!daily[dateString]) {
-        daily[dateString] = {
-          date: dateString,
-          amount: 0,
-          breakdown: {}
-        };
-      }
-      
-      daily[dateString].amount += amount;
-      daily[dateString].breakdown[app] = (daily[dateString].breakdown[app] || 0) + amount;
-    }
-  }
-  
-  // Create weekly summary
-  const currentDate = new Date();
-  const weekStart = new Date(currentDate);
-  weekStart.setDate(currentDate.getDate() - currentDate.getDay());
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  
-  const weekString = `${weekStart.toISOString().split('T')[0]} to ${weekEnd.toISOString().split('T')[0]}`;
-  
-  const weekly: WeeklyEarning = {
-    week: weekString,
-    amount: records.reduce((sum, record) => sum + record.amount, 0),
-    breakdown: records.reduce((breakdown, record) => {
-      breakdown[record.app] = (breakdown[record.app] || 0) + record.amount;
-      return breakdown;
-    }, {} as Record<DeliveryApp, number>)
+  // Mocked coordinates for demo
+  private coordinates: Record<string, { lat: number; lng: number }> = {
+    'Bikaneri Restaurant, Bodakdev': { lat: 23.0325, lng: 72.5114 },
+    'Parivar Society, Near ISKON Temple': { lat: 23.0525, lng: 72.5314 },
+    'The Belgian Waffle, CG Road': { lat: 23.0285, lng: 72.5464 },
+    'Indraprasth Tower, C.G. Road': { lat: 23.0405, lng: 72.5504 },
+    'Hotel Havmor, Navrangpura': { lat: 23.0345, lng: 72.5564 },
+    'Sarthak Complex, Satellite': { lat: 23.0165, lng: 72.5164 },
+    'Pizza Hut, Vastrapur': { lat: 23.0395, lng: 72.5294 },
+    'Prernatirth Derasar, Jodhpur': { lat: 23.0105, lng: 72.5114 },
+    'Domino\'s Pizza, Satellite': { lat: 23.0155, lng: 72.5194 },
+    'Indraprasth Greens, Prahlad Nagar': { lat: 23.0175, lng: 72.5084 },
+    'Honest Restaurant, Ashram Road': { lat: 23.0445, lng: 72.5704 },
+    'Ratnam Shopping Mall, C.G. Road': { lat: 23.0365, lng: 72.5534 },
+    'McDonald\'s, SG Highway': { lat: 23.0455, lng: 72.5014 },
+    'Acropolis Mall, Thaltej': { lat: 23.0475, lng: 72.5074 },
+    'La Pino\'z Pizza, Navrangpura': { lat: 23.0395, lng: 72.5594 },
+    'Parimal Garden, Ellis Bridge': { lat: 23.0245, lng: 72.5594 },
+    'Subway, Law Garden': { lat: 23.0265, lng: 72.5604 },
+    'Jodhpur Cross Roads, Satellite': { lat: 23.0105, lng: 72.5214 },
+    'The Grand Thakar, Sola': { lat: 23.0595, lng: 72.5074 },
+    'Alpha One Mall, Vastrapur': { lat: 23.0375, lng: 72.5214 },
   };
   
-  return {
-    records,
-    daily: Object.values(daily).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    weekly: [weekly]
-  };
-};
+  getOrders(): Order[] {
+    return [...this.orders];
+  }
+  
+  getMoreOrders(): Order[] {
+    return [...this.moreOrders];
+  }
+  
+  getOrderById(id: string): Order | null {
+    const allOrders = [...this.orders, ...this.moreOrders];
+    return allOrders.find(order => order.id === id) || null;
+  }
+  
+  getCoordinatesFromAddress(address: string): { lat: number; lng: number } {
+    // In a real app, you would use a geocoding service
+    return this.coordinates[address] || { lat: 23.0225, lng: 72.5714 }; // Default to center of Ahmedabad
+  }
+}
 
-// Data service
-export const mockDataService = {
-  getOrders: () => generateRandomOrders(10),
-  getMoreOrders: () => generateRandomOrders(5),
-  getEarnings: () => generateMockEarnings()
-};
+export const mockDataService = new MockDataService();

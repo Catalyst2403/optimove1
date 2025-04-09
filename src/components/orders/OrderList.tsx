@@ -1,23 +1,47 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Order } from '@/types';
 import { OrderCard } from './OrderCard';
 import { mockDataService } from '@/services/mockData';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw } from 'lucide-react';
+import { toast } from 'sonner';
 
-export const OrderList = () => {
+interface OrderListProps {
+  sortBy: string;
+}
+
+export const OrderList = ({ sortBy }: OrderListProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigate = useNavigate();
   
   const loadOrders = () => {
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      setOrders(mockDataService.getOrders());
+      let newOrders = mockDataService.getOrders();
+      sortOrders(newOrders, sortBy);
+      setOrders(newOrders);
       setIsLoading(false);
     }, 1000);
+  };
+  
+  const sortOrders = (ordersList: Order[], sortOption: string) => {
+    switch (sortOption) {
+      case 'highestPay':
+        return ordersList.sort((a, b) => b.pay - a.pay);
+      case 'lowestPay':
+        return ordersList.sort((a, b) => a.pay - b.pay);
+      case 'shortestDistance':
+        return ordersList.sort((a, b) => a.distance - b.distance);
+      case 'shortestTime':
+        return ordersList.sort((a, b) => a.estimatedTime - b.estimatedTime);
+      default:
+        return ordersList;
+    }
   };
   
   const refreshOrders = () => {
@@ -26,23 +50,22 @@ export const OrderList = () => {
     setIsRefreshing(true);
     // Simulate API call
     setTimeout(() => {
-      setOrders(mockDataService.getOrders());
+      let newOrders = mockDataService.getOrders();
+      sortOrders(newOrders, sortBy);
+      setOrders(newOrders);
       setIsRefreshing(false);
     }, 1000);
   };
   
   const handleAcceptOrder = (acceptedOrder: Order) => {
-    // Remove the accepted order from the list
-    setOrders(orders.filter(order => order.id !== acceptedOrder.id));
-    
-    // Add a new order after a delay to simulate real-time updates
-    setTimeout(() => {
-      const newOrders = mockDataService.getMoreOrders().slice(0, 1);
-      setOrders(prevOrders => [...newOrders, ...prevOrders]);
-    }, 3000);
+    navigate(`/order/${acceptedOrder.id}`);
   };
   
-  // Initial load
+  const handleViewDetails = (order: Order) => {
+    navigate(`/order/${order.id}`);
+  };
+  
+  // Effect for initial load
   useEffect(() => {
     loadOrders();
     
@@ -50,12 +73,34 @@ export const OrderList = () => {
     const interval = setInterval(() => {
       if (Math.random() > 0.7) { // 30% chance of new order
         const newOrders = mockDataService.getMoreOrders().slice(0, 1);
-        setOrders(prevOrders => [...newOrders, ...prevOrders.slice(0, 9)]);
+        if (newOrders.length > 0) {
+          toast("New order available!", {
+            description: `₹${newOrders[0].pay} - ${newOrders[0].distance}km`,
+            action: {
+              label: "View",
+              onClick: () => navigate(`/order/${newOrders[0].id}`),
+            },
+          });
+        }
+        setOrders(prevOrders => {
+          const updatedOrders = [...newOrders, ...prevOrders.slice(0, 9)];
+          return sortOrders(updatedOrders, sortBy);
+        });
       }
     }, 10000);
     
     return () => clearInterval(interval);
   }, []);
+  
+  // Effect for sorting when sortBy changes
+  useEffect(() => {
+    if (!isLoading && orders.length > 0) {
+      setOrders(prevOrders => {
+        const newOrders = [...prevOrders];
+        return sortOrders(newOrders, sortBy);
+      });
+    }
+  }, [sortBy]);
   
   if (isLoading) {
     return (
@@ -129,7 +174,8 @@ export const OrderList = () => {
             <OrderCard 
               key={order.id} 
               order={order} 
-              onAccept={handleAcceptOrder} 
+              onAccept={handleAcceptOrder}
+              onViewDetails={handleViewDetails}
             />
           ))
         )}

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Clock, Navigation2, MapPin } from 'lucide-react';
+import { Clock, Navigation2, MapPin, ExternalLink } from 'lucide-react';
 import { Order } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,20 +9,21 @@ import { toast } from 'sonner';
 interface OrderCardProps {
   order: Order;
   onAccept: (order: Order) => void;
+  onViewDetails: (order: Order) => void;
 }
 
-export const OrderCard = ({ order, onAccept }: OrderCardProps) => {
+export const OrderCard = ({ order, onAccept, onViewDetails }: OrderCardProps) => {
   const [isAccepting, setIsAccepting] = useState(false);
   
-  const handleAccept = () => {
+  const handleAccept = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsAccepting(true);
     
     // Simulate a delay before redirection
     setTimeout(() => {
       onAccept(order);
       setIsAccepting(false);
-      toast.success(`Order accepted! Redirecting to ${order.app.charAt(0).toUpperCase() + order.app.slice(1)}`);
-    }, 1000);
+    }, 500);
   };
   
   const getAppBadgeClass = (app: string): string => {
@@ -39,7 +40,10 @@ export const OrderCard = ({ order, onAccept }: OrderCardProps) => {
   };
   
   return (
-    <div className={`order-card ${order.pay > 100 ? 'order-card-highlight' : ''}`}>
+    <div 
+      className={`order-card ${order.pay > 60 ? 'order-card-highlight' : ''} cursor-pointer`}
+      onClick={() => onViewDetails(order)}
+    >
       <div className="flex justify-between items-start mb-3">
         <Badge variant="outline" className={`app-badge ${getAppBadgeClass(order.app)}`}>
           {order.app.charAt(0).toUpperCase() + order.app.slice(1)}
@@ -77,13 +81,28 @@ export const OrderCard = ({ order, onAccept }: OrderCardProps) => {
         </div>
       </div>
       
-      <Button 
-        className="w-full"
-        onClick={handleAccept}
-        disabled={isAccepting}
-      >
-        {isAccepting ? 'Accepting...' : 'Accept Order'}
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails(order);
+          }}
+        >
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Details
+        </Button>
+        
+        <Button 
+          className="flex-[2] bg-green-600 hover:bg-green-700"
+          onClick={handleAccept}
+          disabled={isAccepting}
+        >
+          {isAccepting ? 'Accepting...' : 'Accept Order'}
+        </Button>
+      </div>
     </div>
   );
 };
