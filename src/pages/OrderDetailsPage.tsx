@@ -29,7 +29,7 @@ const defaultCenter = {
 // 4. Create API credentials (API key)
 // 5. Restrict the API key to your domains for security
 // Replace 'YOUR_GOOGLE_MAPS_API_KEY' with your actual key
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBZV41QInLZXAzbnHGzp9JmzhKvm9BObGs';
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
