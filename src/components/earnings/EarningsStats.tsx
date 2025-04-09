@@ -16,11 +16,11 @@ export const EarningsStats = () => {
     setTimeout(() => {
       const data = mockDataService.getEarnings();
       
-      // Get today's earnings (first day in the daily data)
-      const todayAmount = data.daily.length > 0 ? data.daily[0].amount : 0;
+      // Get today's earnings
+      const todayAmount = data.todayAmount || 0;
       
       // Get week's earnings
-      const weekAmount = data.weekly.length > 0 ? data.weekly[0].amount : 0;
+      const weekAmount = data.weekAmount || 0;
       
       // Calculate average order value
       const totalOrders = data.records.length;
