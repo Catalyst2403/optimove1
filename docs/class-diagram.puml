@@ -1,0 +1,105 @@
+
+@startuml Optimove Delivery App
+
+' Enums and Types
+enum DeliveryApp {
+  swiggy
+  zomato
+  eatsure
+}
+
+' Core Entities
+class Order {
+  +id: string
+  +app: DeliveryApp
+  +pickupLocation: string
+  +dropLocation: string
+  +distance: number
+  +pay: number
+  +estimatedTime: number
+  +timestamp: Date
+}
+
+class User {
+  +id: string
+  +name: string
+  +mobile: string
+  +location: Location
+}
+
+class Location {
+  +latitude: number
+  +longitude: number
+}
+
+class EarningRecord {
+  +id: string
+  +date: Date
+  +amount: number
+  +app: DeliveryApp
+  +orderId: string
+}
+
+class DailyEarning {
+  +date: string
+  +amount: number
+  +breakdown: Map<DeliveryApp, number>
+}
+
+class WeeklyEarning {
+  +week: string
+  +amount: number
+  +breakdown: Map<DeliveryApp, number>
+}
+
+' Service Classes
+class MockDataService {
+  -orders: Order[]
+  -moreOrders: Order[]
+  -dailyEarnings: DailyEarning[]
+  -weeklyEarnings: WeeklyEarning[]
+  -earningsRecords: EarningRecord[]
+  +getOrders(): Order[]
+  +getMoreOrders(): Order[]
+  +getOrderById(orderId: string): Order
+  +getEarnings(): Object
+  +getCoordinatesFromAddress(address: string): Location
+}
+
+' Components
+class OrderList {
+  -orders: Order[]
+  -isLoading: boolean
+  -isRefreshing: boolean
+  +loadOrders()
+  +refreshOrders()
+  +handleAcceptOrder(order: Order)
+  +handleViewDetails(order: Order)
+}
+
+class EarningsStats {
+  -todayEarnings: number
+  -weekEarnings: number
+  -avgOrderValue: number
+  -isLoading: boolean
+}
+
+class AppPerformance {
+  -appData: Object
+  -isLoading: boolean
+}
+
+' Relationships
+User "1" -- "many" Order : manages >
+Order "1" -- "1" EarningRecord : generates >
+EarningRecord "many" -- "1" DailyEarning : aggregates >
+DailyEarning "many" -- "1" WeeklyEarning : aggregates >
+MockDataService "1" -- "many" Order : provides >
+MockDataService "1" -- "many" EarningRecord : manages >
+OrderList "1" -- "many" Order : displays >
+EarningsStats -- EarningRecord : analyzes >
+AppPerformance -- EarningRecord : visualizes >
+Order -- DeliveryApp : belongs to >
+User -- Location : has >
+
+@enduml
