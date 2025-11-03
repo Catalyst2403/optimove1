@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Order } from '@/types';
 import { OrderCard } from './OrderCard';
 import { mockDataService } from '@/services/mockData';
@@ -12,12 +12,18 @@ interface OrderListProps {
   sortBy: string;
 }
 
+interface OrderWithTimer {
+  order: Order;
+  timerId: NodeJS.Timeout;
+}
+
 export const OrderList = ({ sortBy }: OrderListProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   const { handleAccept } = useOrderNotification();
+  const orderTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   
   // Sort orders helper
   const sortOrders = (ordersList: Order[], sortOption: string) => {
@@ -56,9 +62,47 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
     setIsRefreshing(false);
   };
   
+  // Add new order with 1-minute auto-removal
+  const addOrderWithTimer = (newOrder: Order) => {
+    // Add order to list
+    setOrders(prev => {
+      // Check if order already exists
+      if (prev.some(o => o.id === newOrder.id)) {
+        return prev;
+      }
+      const sorted = sortOrders([newOrder, ...prev], sortBy);
+      return sorted;
+    });
+    
+    // Set up 1-minute removal timer
+    const timerId = setTimeout(() => {
+      removeOrder(newOrder.id);
+    }, 60000); // 1 minute
+    
+    // Store timer reference
+    orderTimersRef.current.set(newOrder.id, timerId);
+  };
+  
+  // Remove order and clear its timer
+  const removeOrder = (orderId: string) => {
+    setOrders(prev => prev.filter(o => o.id !== orderId));
+    
+    // Clear timer if it exists
+    const timer = orderTimersRef.current.get(orderId);
+    if (timer) {
+      clearTimeout(timer);
+      orderTimersRef.current.delete(orderId);
+    }
+  };
+  
   // Initial load
   useEffect(() => {
     loadOrders();
+    
+    // Subscribe to new order notifications
+    const unsubscribe = orderNotificationService.subscribe((order) => {
+      addOrderWithTimer(order);
+    });
     
     // Start random notifications
     orderNotificationService.startRandomNotifications(() => {
@@ -67,7 +111,12 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
     });
     
     return () => {
+      unsubscribe();
       orderNotificationService.stopRandomNotifications();
+      
+      // Clear all timers on unmount
+      orderTimersRef.current.forEach(timer => clearTimeout(timer));
+      orderTimersRef.current.clear();
     };
   }, []);
   
@@ -75,10 +124,7 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
   const handleAcceptOrder = (acceptedOrder: Order) => {
     const accepted = handleAccept(acceptedOrder);
     if (accepted) {
-      setOrders(prev => {
-        const sorted = sortOrders([accepted, ...prev], sortBy);
-        return sorted;
-      });
+      // Order is already in the list, just navigate
       navigate(`/order/${accepted.id}`);
     }
   };
@@ -86,7 +132,7 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
   // Re-sort when sortBy changes
   useEffect(() => {
     if (!isLoading && orders.length > 0) {
-      setOrders(prev => sortOrders(prev, sortBy));
+      setOrders(prev => sortOrders([...prev], sortBy));
     }
   }, [sortBy, isLoading]);
   
@@ -156,7 +202,7 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
               Waiting for new orders...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              New orders will appear as notifications
+              New orders will appear here and disappear after 1 minute
             </p>
           </div>
         ) : (
