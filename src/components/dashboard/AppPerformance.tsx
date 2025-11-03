@@ -29,7 +29,7 @@ export const AppPerformance = () => {
       
       // Calculate percentages
       const percentages = Object.entries(earnings).reduce((acc: any, [app, amount]: any) => {
-        acc[app] = Math.round((Number(amount) / totalEarnings) * 100);
+        acc[app] = Math.round((Number(amount) / Number(totalEarnings)) * 100);
         return acc;
       }, {});
       
