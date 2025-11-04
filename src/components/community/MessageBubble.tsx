@@ -7,7 +7,35 @@ interface MessageBubbleProps {
   isOwnMessage: boolean;
 }
 
+// Generate a consistent color for each user based on their user_id
+const getUsernameColor = (userId: string): string => {
+  const colors = [
+    '#06CF9C', // Teal/Cyan
+    '#BB86FC', // Purple
+    '#F06292', // Pink
+    '#4FC3F7', // Light Blue
+    '#FFB74D', // Orange
+    '#AED581', // Light Green
+    '#FF8A65', // Deep Orange
+    '#9575CD', // Deep Purple
+    '#4DB6AC', // Teal
+    '#DCE775', // Lime
+    '#FFD54F', // Amber
+    '#A1887F', // Brown
+  ];
+
+  // Simple hash function to convert user_id to index
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+
 export const MessageBubble = ({ message, isOwnMessage }: MessageBubbleProps) => {
+  const usernameColor = getUsernameColor(message.user_id);
+
   return (
     <div
       className={cn(
@@ -16,7 +44,10 @@ export const MessageBubble = ({ message, isOwnMessage }: MessageBubbleProps) => 
       )}
     >
       {!isOwnMessage && (
-        <div className="text-xs font-medium text-muted-foreground mb-1 px-2">
+        <div
+          className="text-xs font-semibold mb-1 px-2"
+          style={{ color: usernameColor }}
+        >
           {message.user_name}
         </div>
       )}
@@ -31,7 +62,7 @@ export const MessageBubble = ({ message, isOwnMessage }: MessageBubbleProps) => 
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
       </div>
       <div className="text-xs text-muted-foreground mt-1 px-2">
-        {format(new Date(message.created_at), 'h:mm a')}
+        {format(new Date(message.created_at), 'HH:mm')}
       </div>
     </div>
   );

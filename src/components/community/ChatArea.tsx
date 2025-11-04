@@ -19,13 +19,10 @@ export const ChatArea = ({ channel, messages, onSendMessage, sending, onBack }: 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Get current user ID
+  // Get current user ID from localStorage
   useEffect(() => {
-    const getUserId = async () => {
-      const { data } = await supabase.auth.getUser();
-      setCurrentUserId(data.user?.id || null);
-    };
-    getUserId();
+    const userId = localStorage.getItem('driver_user_id');
+    setCurrentUserId(userId);
   }, []);
 
   // Auto-scroll to bottom when new messages arrive

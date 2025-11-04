@@ -1,6 +1,8 @@
-import { Hash } from 'lucide-react';
+import { Hash, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import type { Channel } from '@/hooks/useCommunityChat';
 
 interface ChannelListProps {
@@ -10,10 +12,23 @@ interface ChannelListProps {
 }
 
 export const ChannelList = ({ channels, activeChannelId, onChannelSelect }: ChannelListProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="w-64 border-r bg-card flex flex-col">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">Community Channels</h2>
+        <div className="flex items-center gap-2 mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-8 h-8 p-0"
+            onClick={() => navigate('/')}
+            title="Back to Home"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold">Community Channels</h2>
+        </div>
       </div>
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">

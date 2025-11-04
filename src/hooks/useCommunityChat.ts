@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { mockMessages } from '@/data/mockCommunityMessages';
 
 export interface Channel {
   id: string;
@@ -50,144 +51,81 @@ export const useCommunityChat = (activeChannelId: string | null) => {
     fetchChannels();
   }, [toast]);
 
-  // Fetch messages for active channel
+  // Load mock messages for active channel
   useEffect(() => {
     if (!activeChannelId) {
       setMessages([]);
       return;
     }
 
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('channel_id', activeChannelId)
-        .order('created_at', { ascending: true });
+    // Find the active channel to get its slug
+    const activeChannel = channels.find(ch => ch.id === activeChannelId);
+    if (!activeChannel) {
+      setMessages([]);
+      return;
+    }
 
-      if (error) {
-        console.error('Error fetching messages:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load messages',
-          variant: 'destructive',
-        });
-      } else {
-        // Use localStorage for simple user identification
-        const currentUserId = localStorage.getItem('driver_user_id');
-        const messagesWithUsers = (data || []).map((message) => {
-          if (message.user_id === currentUserId) {
-            return {
-              ...message,
-              user_name: 'You',
-            };
-          }
-          return {
-            ...message,
-            user_name: message.user_id.substring(0, 8), // Fallback to user ID substring
-          };
-        });
-        setMessages(messagesWithUsers);
-      }
-    };
+    // Filter mock messages by channel slug
+    const channelMessages = mockMessages
+      .filter(msg => msg.channel_slug === activeChannel.slug)
+      .map(msg => ({
+        id: msg.id,
+        channel_id: activeChannelId,
+        user_id: msg.user_id,
+        user_name: msg.user_name,
+        content: msg.content,
+        created_at: msg.created_at,
+      }))
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-    fetchMessages();
-  }, [activeChannelId, toast]);
+    setMessages(channelMessages);
+  }, [activeChannelId, channels]);
 
-  // Set up real-time subscription
-  useEffect(() => {
-    if (!activeChannelId) return;
+  // Real-time subscription disabled for mock messages
+  // Using static mock data instead
 
-    const channel = supabase
-      .channel(`messages:${activeChannelId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `channel_id=eq.${activeChannelId}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          
-          // Use localStorage for simple user identification
-          const currentUserId = localStorage.getItem('driver_user_id');
-          const messageWithUser = {
-            ...newMessage,
-            user_name:
-              newMessage.user_id === currentUserId
-                ? 'You'
-                : newMessage.user_id.substring(0, 8),
-          };
-
-          setMessages((prev) => [...prev, messageWithUser]);
-
-          // Show toast if message is not from current user
-          if (newMessage.user_id !== currentUserId) {
-            const currentChannel = channels.find((ch) => ch.id === activeChannelId);
-            toast({
-              title: `New message in #${currentChannel?.name}`,
-              description: newMessage.content.substring(0, 50) + (newMessage.content.length > 50 ? '...' : ''),
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeChannelId, channels, toast]);
-
-  // Send message - using localStorage for simple auth
+  // Send message - Session-only (UI only, not saved to backend)
   const sendMessage = useCallback(
     async (content: string) => {
       if (!activeChannelId || !content.trim()) return;
 
       setSending(true);
-      try {
-        // Get or create a simple user ID based on username and mobile
+
+      // Simulate sending delay
+      setTimeout(() => {
+        // Get or create a user ID for the session
         let userId = localStorage.getItem('driver_user_id');
         let userName = localStorage.getItem('driver_user_name');
-        
+
         if (!userId) {
-          // Generate a simple user ID from mobile number or create a random one
-          userId = 'driver_' + Math.random().toString(36).substr(2, 9);
+          // Generate a simple user ID
+          userId = 'current_user_' + Math.random().toString(36).substr(2, 9);
           localStorage.setItem('driver_user_id', userId);
         }
-        
+
         if (!userName) {
-          // Use a default name if not set
-          userName = 'Driver';
+          // Use a default name
+          userName = 'You';
           localStorage.setItem('driver_user_name', userName);
         }
 
-        const { error } = await supabase.from('messages').insert({
+        // Create new message object
+        const newMessage: Message = {
+          id: 'temp_' + Date.now(),
           channel_id: activeChannelId,
           user_id: userId,
+          user_name: userName,
           content: content.trim(),
-        });
+          created_at: new Date().toISOString(),
+        };
 
-        if (error) {
-          console.error('Error sending message:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to send message',
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        console.error('Error sending message:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to send message',
-          variant: 'destructive',
-        });
-      } finally {
+        // Add message to state (session only)
+        setMessages((prev) => [...prev, newMessage]);
+
         setSending(false);
-      }
+      }, 300);
     },
-    [activeChannelId, toast]
+    [activeChannelId]
   );
 
   return {

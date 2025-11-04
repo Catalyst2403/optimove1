@@ -134,7 +134,7 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
               Waiting for new orders...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              New orders will appear here and disappear after 1 minute
+            
             </p>
           </div>
         ) : (
