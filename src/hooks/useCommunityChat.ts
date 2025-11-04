@@ -72,22 +72,20 @@ export const useCommunityChat = (activeChannelId: string | null) => {
           variant: 'destructive',
         });
       } else {
-        // Fetch user names for messages
-        const messagesWithUsers = await Promise.all(
-          (data || []).map(async (message) => {
-            const { data: userData } = await supabase.auth.getUser();
-            if (message.user_id === userData.user?.id) {
-              return {
-                ...message,
-                user_name: userData.user?.user_metadata?.name || 'You',
-              };
-            }
+        // Use localStorage for simple user identification
+        const currentUserId = localStorage.getItem('driver_user_id');
+        const messagesWithUsers = (data || []).map((message) => {
+          if (message.user_id === currentUserId) {
             return {
               ...message,
-              user_name: message.user_id.substring(0, 8), // Fallback to user ID substring
+              user_name: 'You',
             };
-          })
-        );
+          }
+          return {
+            ...message,
+            user_name: message.user_id.substring(0, 8), // Fallback to user ID substring
+          };
+        });
         setMessages(messagesWithUsers);
       }
     };
@@ -109,23 +107,23 @@ export const useCommunityChat = (activeChannelId: string | null) => {
           table: 'messages',
           filter: `channel_id=eq.${activeChannelId}`,
         },
-        async (payload) => {
+        (payload) => {
           const newMessage = payload.new as Message;
           
-          // Get user name
-          const { data: userData } = await supabase.auth.getUser();
+          // Use localStorage for simple user identification
+          const currentUserId = localStorage.getItem('driver_user_id');
           const messageWithUser = {
             ...newMessage,
             user_name:
-              newMessage.user_id === userData.user?.id
-                ? userData.user?.user_metadata?.name || 'You'
+              newMessage.user_id === currentUserId
+                ? 'You'
                 : newMessage.user_id.substring(0, 8),
           };
 
           setMessages((prev) => [...prev, messageWithUser]);
 
-          // Show toast if message is not from current user and not in active channel
-          if (newMessage.user_id !== userData.user?.id) {
+          // Show toast if message is not from current user
+          if (newMessage.user_id !== currentUserId) {
             const currentChannel = channels.find((ch) => ch.id === activeChannelId);
             toast({
               title: `New message in #${currentChannel?.name}`,
@@ -141,29 +139,32 @@ export const useCommunityChat = (activeChannelId: string | null) => {
     };
   }, [activeChannelId, channels, toast]);
 
-  // Send message
+  // Send message - using localStorage for simple auth
   const sendMessage = useCallback(
     async (content: string) => {
       if (!activeChannelId || !content.trim()) return;
 
       setSending(true);
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          toast({
-            title: 'Error',
-            description: 'You must be logged in to send messages',
-            variant: 'destructive',
-          });
-          return;
+        // Get or create a simple user ID based on username and mobile
+        let userId = localStorage.getItem('driver_user_id');
+        let userName = localStorage.getItem('driver_user_name');
+        
+        if (!userId) {
+          // Generate a simple user ID from mobile number or create a random one
+          userId = 'driver_' + Math.random().toString(36).substr(2, 9);
+          localStorage.setItem('driver_user_id', userId);
+        }
+        
+        if (!userName) {
+          // Use a default name if not set
+          userName = 'Driver';
+          localStorage.setItem('driver_user_name', userName);
         }
 
         const { error } = await supabase.from('messages').insert({
           channel_id: activeChannelId,
-          user_id: user.id,
+          user_id: userId,
           content: content.trim(),
         });
 

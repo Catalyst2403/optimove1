@@ -53,6 +53,22 @@ export const useOrderNotification = () => {
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     setState(prev => ({ ...prev, isVisible: false }));
     
+    // Pause notifications for 30 seconds
+    orderNotificationService.pauseForDuration(30000);
+    
+    // Redirect to app based on order app
+    const appUrls: Record<string, string> = {
+      swiggy: 'swiggy://',
+      zomato: 'zomato://',
+      eatsure: 'eatsure://',
+    };
+    
+    const appUrl = appUrls[order.app.toLowerCase()];
+    if (appUrl) {
+      // Try to open the app
+      window.location.href = appUrl;
+    }
+    
     // Show next notification after a brief delay
     setTimeout(() => {
       showNextNotification();

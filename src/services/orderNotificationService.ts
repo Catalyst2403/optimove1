@@ -5,6 +5,7 @@ type OrderNotificationListener = (order: Order) => void;
 class OrderNotificationService {
   private listeners: OrderNotificationListener[] = [];
   private notificationInterval: NodeJS.Timeout | null = null;
+  private isPaused: boolean = false;
 
   subscribe(listener: OrderNotificationListener) {
     this.listeners.push(listener);
@@ -14,7 +15,22 @@ class OrderNotificationService {
   }
 
   emit(order: Order) {
-    this.listeners.forEach(listener => listener(order));
+    if (!this.isPaused) {
+      this.listeners.forEach(listener => listener(order));
+    }
+  }
+
+  pause() {
+    this.isPaused = true;
+  }
+
+  resume() {
+    this.isPaused = false;
+  }
+
+  pauseForDuration(durationMs: number) {
+    this.pause();
+    setTimeout(() => this.resume(), durationMs);
   }
 
   startRandomNotifications(getRandomOrder: () => Order) {
