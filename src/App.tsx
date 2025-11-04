@@ -9,6 +9,7 @@ import OrdersPage from "./pages/OrdersPage";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import EarningsPage from "./pages/EarningsPage";
 import ProfilePage from "./pages/ProfilePage";
+import CommunityPage from "./pages/CommunityPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { Layout } from "./components/layout/Layout";
@@ -53,6 +54,7 @@ const AppContent = () => {
               <ProfilePage />
             </Layout>
           } />
+          <Route path="/community" element={<CommunityPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

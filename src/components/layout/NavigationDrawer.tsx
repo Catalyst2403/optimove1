@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, ChevronRight } from 'lucide-react';
+import { User, ChevronRight, MessageCircle } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -19,7 +19,11 @@ export const NavigationDrawer = ({ isOpen, onClose }: NavigationDrawerProps) => 
       icon: User,
       label: 'Profile',
     },
-    // Add more menu items here in the future
+    {
+      to: '/community',
+      icon: MessageCircle,
+      label: 'Community Chat',
+    },
   ];
 
   return (
