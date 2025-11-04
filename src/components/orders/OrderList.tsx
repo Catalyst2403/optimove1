@@ -1,34 +1,27 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Order } from '@/types';
 import { OrderCard } from './OrderCard';
-import { mockDataService } from '@/services/mockData';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrderNotification } from '@/hooks/useOrderNotification';
-import { orderNotificationService } from '@/services/orderNotificationService';
+import { useOrders } from '@/contexts/OrderContext';
 
 interface OrderListProps {
   sortBy: string;
 }
 
-interface OrderWithTimer {
-  order: Order;
-  timerId: NodeJS.Timeout;
-}
-
 export const OrderList = ({ sortBy }: OrderListProps) => {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { orders } = useOrders();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   const { handleAccept } = useOrderNotification();
-  const orderTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   
-  // Sort orders helper
-  const sortOrders = (ordersList: Order[], sortOption: string) => {
-    const sorted = [...ordersList];
-    switch (sortOption) {
+  // Sort orders using useMemo for performance
+  const sortedOrders = useMemo(() => {
+    const sorted = [...orders];
+    switch (sortBy) {
       case 'highestPay':
         return sorted.sort((a, b) => b.pay - a.pay);
       case 'lowestPay':
@@ -40,86 +33,32 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
       default:
         return sorted;
     }
-  };
-  
+  }, [orders, sortBy]);
+
   // Load initial empty orders
   const loadOrders = async () => {
     setIsLoading(true);
-    
+
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 300));
-    
-    setOrders([]);
+
     setIsLoading(false);
   };
-  
+
   // Refresh orders
   const refreshOrders = async () => {
     if (isRefreshing) return;
-    
+
     setIsRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 500));
     setIsRefreshing(false);
   };
   
-  // Add new order with 1-minute auto-removal
-  const addOrderWithTimer = (newOrder: Order) => {
-    // Add order to list
-    setOrders(prev => {
-      // Check if order already exists
-      if (prev.some(o => o.id === newOrder.id)) {
-        return prev;
-      }
-      const sorted = sortOrders([newOrder, ...prev], sortBy);
-      return sorted;
-    });
-    
-    // Set up 1-minute removal timer
-    const timerId = setTimeout(() => {
-      removeOrder(newOrder.id);
-    }, 60000); // 1 minute
-    
-    // Store timer reference
-    orderTimersRef.current.set(newOrder.id, timerId);
-  };
-  
-  // Remove order and clear its timer
-  const removeOrder = (orderId: string) => {
-    setOrders(prev => prev.filter(o => o.id !== orderId));
-    
-    // Clear timer if it exists
-    const timer = orderTimersRef.current.get(orderId);
-    if (timer) {
-      clearTimeout(timer);
-      orderTimersRef.current.delete(orderId);
-    }
-  };
-  
   // Initial load
   useEffect(() => {
     loadOrders();
-    
-    // Subscribe to new order notifications
-    const unsubscribe = orderNotificationService.subscribe((order) => {
-      addOrderWithTimer(order);
-    });
-    
-    // Start random notifications
-    orderNotificationService.startRandomNotifications(() => {
-      const moreOrders = mockDataService.getMoreOrders();
-      return moreOrders[Math.floor(Math.random() * moreOrders.length)];
-    });
-    
-    return () => {
-      unsubscribe();
-      orderNotificationService.stopRandomNotifications();
-      
-      // Clear all timers on unmount
-      orderTimersRef.current.forEach(timer => clearTimeout(timer));
-      orderTimersRef.current.clear();
-    };
   }, []);
-  
+
   // Handle accepted orders from notifications
   const handleAcceptOrder = (acceptedOrder: Order) => {
     const accepted = handleAccept(acceptedOrder);
@@ -128,13 +67,6 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
       navigate(`/order/${accepted.id}`);
     }
   };
-  
-  // Re-sort when sortBy changes
-  useEffect(() => {
-    if (!isLoading && orders.length > 0) {
-      setOrders(prev => sortOrders([...prev], sortBy));
-    }
-  }, [sortBy, isLoading]);
   
   const handleViewDetails = (order: Order) => {
     navigate(`/order/${order.id}`);
@@ -196,7 +128,7 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
       </div>
       
       <div className="space-y-4">
-        {orders.length === 0 ? (
+        {sortedOrders.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               Waiting for new orders...
@@ -206,7 +138,7 @@ export const OrderList = ({ sortBy }: OrderListProps) => {
             </p>
           </div>
         ) : (
-          orders.map((order) => (
+          sortedOrders.map((order) => (
             <OrderCard
               key={order.id}
               order={order}

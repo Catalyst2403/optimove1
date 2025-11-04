@@ -1,12 +1,11 @@
 import { Order } from '@/types';
 import { MapPin, Navigation, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useRef, useEffect } from 'react';
 
 interface OrderNotificationCardProps {
   order: Order;
   isVisible: boolean;
-  onAccept: (order: Order) => void;
-  onReject: () => void;
+  onDismiss: () => void;
 }
 
 const appThemes = {
@@ -33,10 +32,181 @@ const appThemes = {
 export const OrderNotificationCard = ({
   order,
   isVisible,
-  onAccept,
-  onReject,
+  onDismiss,
 }: OrderNotificationCardProps) => {
   const theme = appThemes[order.app];
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
+  const [swipeOffsetX, setSwipeOffsetX] = useState(0);
+  const [swipeOffsetY, setSwipeOffsetY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Reset swipe state when visibility changes
+  useEffect(() => {
+    if (!isVisible) {
+      setSwipeOffsetX(0);
+      setSwipeOffsetY(0);
+      setIsDragging(false);
+    }
+  }, [isVisible]);
+
+  const minSwipeDistance = 50; // Minimum distance for swipe to trigger dismiss
+  const dismissThreshold = 100; // Distance to auto-dismiss
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchEndY(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchStartY(e.targetTouches[0].clientY);
+    setIsDragging(true);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null || touchStartY === null) return;
+
+    const currentTouchX = e.targetTouches[0].clientX;
+    const currentTouchY = e.targetTouches[0].clientY;
+    const diffX = currentTouchX - touchStartX;
+    const diffY = touchStartY - currentTouchY;
+
+    // Allow horizontal swipes (left/right)
+    setSwipeOffsetX(diffX);
+
+    // Allow upward swipe only
+    if (diffY > 0) {
+      setSwipeOffsetY(-diffY);
+    }
+
+    setTouchEndX(currentTouchX);
+    setTouchEndY(currentTouchY);
+  };
+
+  const onTouchEnd = () => {
+    if (touchStartX === null || touchStartY === null) {
+      setIsDragging(false);
+      setSwipeOffsetX(0);
+      setSwipeOffsetY(0);
+      return;
+    }
+
+    const distanceX = touchEndX !== null ? touchEndX - touchStartX : 0;
+    const distanceY = touchEndY !== null ? touchStartY - touchEndY : 0;
+
+    const isSwipeLeft = distanceX < -minSwipeDistance;
+    const isSwipeRight = distanceX > minSwipeDistance;
+    const isSwipeUp = distanceY > minSwipeDistance;
+
+    const shouldDismiss =
+      isSwipeLeft ||
+      isSwipeRight ||
+      isSwipeUp ||
+      Math.abs(swipeOffsetX) > dismissThreshold ||
+      Math.abs(swipeOffsetY) > dismissThreshold;
+
+    if (shouldDismiss) {
+      // Animate out in the direction of the swipe
+      if (isSwipeLeft || swipeOffsetX < -dismissThreshold) {
+        setSwipeOffsetX(-400); // Swipe left
+      } else if (isSwipeRight || swipeOffsetX > dismissThreshold) {
+        setSwipeOffsetX(400); // Swipe right
+      } else if (isSwipeUp || swipeOffsetY < -dismissThreshold) {
+        setSwipeOffsetY(-300); // Swipe up
+      }
+
+      setTimeout(() => {
+        onDismiss();
+      }, 200);
+    } else {
+      // Reset position
+      setSwipeOffsetX(0);
+      setSwipeOffsetY(0);
+    }
+
+    setIsDragging(false);
+    setTouchStartX(null);
+    setTouchStartY(null);
+    setTouchEndX(null);
+    setTouchEndY(null);
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    setTouchEndX(null);
+    setTouchEndY(null);
+    setTouchStartX(e.clientX);
+    setTouchStartY(e.clientY);
+    setIsDragging(true);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (touchStartX === null || touchStartY === null || !isDragging) return;
+
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+    const diffX = currentX - touchStartX;
+    const diffY = touchStartY - currentY;
+
+    // Allow horizontal swipes
+    setSwipeOffsetX(diffX);
+
+    // Allow upward swipe only
+    if (diffY > 0) {
+      setSwipeOffsetY(-diffY);
+    }
+
+    setTouchEndX(currentX);
+    setTouchEndY(currentY);
+  };
+
+  const onMouseUp = () => {
+    if (touchStartX === null || touchStartY === null || !isDragging) {
+      setIsDragging(false);
+      setSwipeOffsetX(0);
+      setSwipeOffsetY(0);
+      return;
+    }
+
+    const distanceX = touchEndX !== null ? touchEndX - touchStartX : 0;
+    const distanceY = touchEndY !== null ? touchStartY - touchEndY : 0;
+
+    const isSwipeLeft = distanceX < -minSwipeDistance;
+    const isSwipeRight = distanceX > minSwipeDistance;
+    const isSwipeUp = distanceY > minSwipeDistance;
+
+    const shouldDismiss =
+      isSwipeLeft ||
+      isSwipeRight ||
+      isSwipeUp ||
+      Math.abs(swipeOffsetX) > dismissThreshold ||
+      Math.abs(swipeOffsetY) > dismissThreshold;
+
+    if (shouldDismiss) {
+      // Animate out in the direction of the swipe
+      if (isSwipeLeft || swipeOffsetX < -dismissThreshold) {
+        setSwipeOffsetX(-400); // Swipe left
+      } else if (isSwipeRight || swipeOffsetX > dismissThreshold) {
+        setSwipeOffsetX(400); // Swipe right
+      } else if (isSwipeUp || swipeOffsetY < -dismissThreshold) {
+        setSwipeOffsetY(-300); // Swipe up
+      }
+
+      setTimeout(() => {
+        onDismiss();
+      }, 200);
+    } else {
+      // Reset position
+      setSwipeOffsetX(0);
+      setSwipeOffsetY(0);
+    }
+
+    setIsDragging(false);
+    setTouchStartX(null);
+    setTouchStartY(null);
+    setTouchEndX(null);
+    setTouchEndY(null);
+  };
 
   return (
     <>
@@ -45,16 +215,30 @@ export const OrderNotificationCard = ({
         className={`fixed inset-0 bg-black/30 z-50 transition-opacity duration-300 ${
           isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
-        onClick={onReject}
       />
 
       {/* Notification Card */}
       <div
-        className={`fixed top-0 left-0 right-0 z-50 px-4 pt-4 transition-all duration-300 ${
-          isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+        ref={cardRef}
+        className={`fixed top-0 left-0 right-0 z-50 px-4 pt-4 ${
+          isDragging ? '' : 'transition-all duration-300'
+        } ${
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}
+        style={{
+          transform: isVisible
+            ? `translate(${swipeOffsetX}px, ${swipeOffsetY}px)`
+            : 'translateY(-300px)',
+        }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
       >
-        <div className="max-w-md mx-auto bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+        <div className="max-w-md mx-auto bg-card border border-border rounded-2xl shadow-2xl overflow-hidden cursor-grab active:cursor-grabbing select-none">
           {/* App Header with Gradient */}
           <div className={`bg-gradient-to-r ${theme.gradient} px-4 py-3 flex items-center justify-between`}>
             <div className="flex items-center gap-2">
@@ -119,22 +303,6 @@ export const OrderNotificationCard = ({
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                onClick={onReject}
-              >
-                Reject
-              </Button>
-              <Button
-                className={`flex-1 ${theme.acceptButton} text-white`}
-                onClick={() => onAccept(order)}
-              >
-                Accept Order
-              </Button>
-            </div>
           </div>
         </div>
       </div>

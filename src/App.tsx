@@ -15,11 +15,12 @@ import { Layout } from "./components/layout/Layout";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { OrderNotificationCard } from "./components/orders/OrderNotificationCard";
 import { useOrderNotification } from "./hooks/useOrderNotification";
+import { OrderProvider } from "./contexts/OrderContext";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { currentNotification, isVisible, handleAccept, handleReject } = useOrderNotification();
+  const { currentNotification, isVisible, handleDismiss } = useOrderNotification();
 
   return (
     <>
@@ -29,8 +30,7 @@ const AppContent = () => {
         <OrderNotificationCard
           order={currentNotification}
           isVisible={isVisible}
-          onAccept={handleAccept}
-          onReject={handleReject}
+          onDismiss={handleDismiss}
         />
       )}
       <BrowserRouter>
@@ -64,9 +64,11 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system">
-      <TooltipProvider>
-        <AppContent />
-      </TooltipProvider>
+      <OrderProvider>
+        <TooltipProvider>
+          <AppContent />
+        </TooltipProvider>
+      </OrderProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

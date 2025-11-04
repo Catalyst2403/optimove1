@@ -7,10 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, ArrowLeft } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const ProfilePage = () => {
@@ -36,31 +35,37 @@ const ProfilePage = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="flex items-center gap-2">
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You will need to log back in to continue using Optimove.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-accent"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Profile</h1>
         </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="flex items-center gap-2">
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You will need to log back in to continue using Optimove.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       
       <div className="flex flex-col items-center gap-4 p-6 border rounded-lg bg-card">

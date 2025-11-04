@@ -60,14 +60,15 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      <div className="mt-8">
+      {/* Available Orders Section - Hidden for now */}
+      {/* <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Recent Orders</h2>
           <Button onClick={() => navigate('/orders')}>View All</Button>
         </div>
-        
+
         <OrderList sortBy={sortBy} />
-      </div>
+      </div> */}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <RecentOrderStats />

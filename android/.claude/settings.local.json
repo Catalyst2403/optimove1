@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(sed:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx cap sync:*)",
+      "Bash(adb devices:*)",
+      "Bash(npx cap run android)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

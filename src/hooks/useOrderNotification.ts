@@ -64,7 +64,16 @@ export const useOrderNotification = () => {
   const handleReject = useCallback(() => {
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     setState(prev => ({ ...prev, isVisible: false }));
-    
+
+    setTimeout(() => {
+      showNextNotification();
+    }, 300);
+  }, [autoCloseTimer, showNextNotification]);
+
+  const handleDismiss = useCallback(() => {
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    setState(prev => ({ ...prev, isVisible: false }));
+
     setTimeout(() => {
       showNextNotification();
     }, 300);
@@ -72,7 +81,7 @@ export const useOrderNotification = () => {
 
   const handleTimeout = useCallback(() => {
     setState(prev => ({ ...prev, isVisible: false }));
-    
+
     setTimeout(() => {
       showNextNotification();
     }, 300);
@@ -102,5 +111,6 @@ export const useOrderNotification = () => {
     isVisible: state.isVisible,
     handleAccept,
     handleReject,
+    handleDismiss,
   };
 };
